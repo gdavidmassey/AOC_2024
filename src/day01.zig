@@ -34,7 +34,7 @@ pub fn day01(part: aoc.Part) !void {
             print("Total distance between pairs: {d}\n", .{sum_distance});
         },
         .Part_02 => {
-            const sum_similarity = try compareSimilarity(&column1, &column2);
+            const sum_similarity = try compareSimilarity_(&column1, &column2);
             print("Total similarity score: {d}\n", .{sum_similarity});
         },
     }
@@ -54,6 +54,23 @@ fn compareSimilarity(column1: *std.ArrayList(u32), column2: *std.ArrayList(u32))
     assert(column1.items.len == column2.items.len);
     for (column1.items) |item| {
         sum += countElement(item, column2) * item;
+    }
+    return sum;
+}
+
+fn compareSimilarity_(column1: *std.ArrayList(u32), column2: *std.ArrayList(u32)) !u32 {
+    var sum: u32 = 0;
+    var col2_i: usize = 0;
+    for (column1.items) |item| {
+        var occurance_count: u32 = 0;
+        while (column2.items[col2_i] <= item) {
+            if (column2.items[col2_i] == item) {
+                occurance_count += 1;
+            }
+            col2_i += 1;
+            // if (col2_i >= column2.items.len) break;
+        }
+        sum += item * occurance_count;
     }
     return sum;
 }
