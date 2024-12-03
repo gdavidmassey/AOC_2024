@@ -44,8 +44,6 @@ const Report = struct {
     safety: Safety = .Unsafe,
     direction: Direction = undefined,
     errorTolerance: u32,
-    errorToleratedAsc: bool = false,
-    errorToleratedDesc: bool = false,
 
     const Self = @This();
 
@@ -76,109 +74,6 @@ const Report = struct {
         } else self.direction = .Unsafe;
     }
 
-    fn checkSafety_(self: *Self) !void {
-        var token_data = std.mem.tokenizeAny(u8, self.data, " \t");
-        var prev_record: u32 = try std.fmt.parseInt(u32, token_data.next().?, 10);
-        switch (self.direction) {
-            .Increasing => {
-                while (token_data.next()) |record| {
-                    const current_record = try std.fmt.parseInt(u32, record, 10);
-                    if (prev_record >= current_record or current_record > prev_record + 3) {
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    prev_record = current_record;
-                }
-            },
-            .Decreasing => {
-                while (token_data.next()) |record| {
-                    const current_record = try std.fmt.parseInt(u32, record, 10);
-                    if (prev_record <= current_record or prev_record > current_record + 3) {
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    prev_record = current_record;
-                }
-            },
-            .Unsafe => {
-                self.safety = .Unsafe;
-                return;
-            },
-        }
-        self.safety = .Safe;
-    }
-
-    fn checkSafety__(self: *Self) !void {
-        var token_data = std.mem.tokenizeAny(u8, self.data, " \t");
-        const first_record: u32 = try std.fmt.parseInt(u32, token_data.next().?, 10);
-        var prev_record: u32 = try std.fmt.parseInt(u32, token_data.next().?, 10);
-        var drop_one_or_two: bool = false;
-        switch (self.direction) {
-            .Increasing => {
-                var i: u32 = 0;
-                if (compare(prev_record, first_record) != .Increasing) {
-                    if (self.errorTolerance == 0) {
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    self.errorTolerance -= 1;
-                }
-                while (token_data.next()) |record| : (i += 1) {
-                    //print("This is the result of compare(1,4) {}\n", .{compare(1, 4)});
-                    std.debug.assert(compare(1, 4) == .Decreasing);
-                    const current_record = try std.fmt.parseInt(u32, record, 10);
-                    if (i > 0) drop_one_or_two = false;
-                    const comp: bool = switch (drop_one_or_two) {
-                        true => compare(current_record, prev_record) != .Increasing or compare(current_record, first_record) != .Increasing,
-                        false => compare(current_record, prev_record) != .Increasing,
-                    };
-                    if (comp) {
-                        if (self.errorTolerance > 0) {
-                            if (i > 0) self.errorTolerance -= 1;
-                            continue;
-                        }
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    prev_record = current_record;
-                }
-            },
-            .Decreasing => {
-                var i: u32 = 0;
-                if (compare(prev_record, first_record) != .Decreasing) {
-                    if (self.errorTolerance == 0) {
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    self.errorTolerance -= 1;
-                    drop_one_or_two = true;
-                }
-                while (token_data.next()) |record| : (i += 1) {
-                    const current_record = try std.fmt.parseInt(u32, record, 10);
-                    if (i > 0) drop_one_or_two = false;
-                    const comp: bool = switch (drop_one_or_two) {
-                        true => compare(current_record, prev_record) != .Decreasing or compare(current_record, first_record) != .Decreasing,
-                        false => compare(current_record, prev_record) != .Decreasing,
-                    };
-                    if (comp) {
-                        if (self.errorTolerance > 0) {
-                            if (i > 0) self.errorTolerance -= 1;
-                            continue;
-                        }
-                        self.safety = .Unsafe;
-                        return;
-                    }
-                    prev_record = current_record;
-                }
-            },
-            .Unsafe => {
-                self.safety = .Unsafe;
-                return;
-            },
-        }
-        self.safety = .Safe;
-    }
-
     fn checkSafety(self: *Self) !void {
         if (try self.checkDirectionSafety(.Increasing)) {
             self.direction = .Increasing;
@@ -206,12 +101,6 @@ const Report = struct {
                 return false;
             }
             errorAllowed -= 1;
-            switch (direction) {
-                .Increasing => self.errorToleratedAsc = true,
-                .Decreasing => self.errorToleratedDesc = true,
-                .Unsafe => unreachable,
-            }
-            // print("{} {} {}\n", .{ first_record, prev_record, direction });
             drop_one_or_two = true;
         }
 
@@ -228,12 +117,6 @@ const Report = struct {
                     return false;
                 }
                 errorAllowed -= 1;
-                switch (direction) {
-                    .Increasing => self.errorToleratedAsc = true,
-                    .Decreasing => self.errorToleratedDesc = true,
-                    .Unsafe => return false,
-                }
-                // print("{} {} {} {}\n", .{ i, current_record, prev_record, direction });
                 continue;
             }
             prev_record = current_record;
