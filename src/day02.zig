@@ -2,11 +2,6 @@ const std = @import("std");
 const aoc = @import("aoc.zig");
 const InputIterator = aoc.InputIterator;
 
-// 16 14 13 12 11 13 12 9 - day02.Direction.Decreasing
-// 34 32 30 31 28 25 22 - day02.Direction.Decreasing
-// 77 74 73 70 67 66 65 - day02.Direction.Decreasing
-// This is returning safe when it should not
-
 const print = std.debug.print;
 
 pub fn day02(part: aoc.Part) !void {
@@ -24,7 +19,6 @@ pub fn day02(part: aoc.Part) !void {
             .Unsafe => {},
         }
     }
-
     print("Total number of safe records with error tolerance {d}: {d}\n", .{ error_tolerance, safe_count });
 }
 
@@ -51,27 +45,6 @@ const Report = struct {
         var self = Self{ .data = data, .errorTolerance = errorTolerance };
         self.checkSafety() catch unreachable;
         return self;
-    }
-
-    fn setDirection(self: *Self) !void {
-        var token_data = std.mem.tokenizeAny(u8, self.data, " \t");
-        var count_increasing: u32 = 0;
-        var count_decreasing: u32 = 0;
-        var prev_record: u32 = try std.fmt.parseInt(u32, token_data.next().?, 10);
-        while (token_data.next()) |record| {
-            const current_record = try std.fmt.parseInt(u32, record, 10);
-            if (prev_record < current_record) {
-                count_increasing += 1;
-            } else if (prev_record > current_record) {
-                count_decreasing += 1;
-            }
-            prev_record = current_record;
-        }
-        if (count_increasing > count_decreasing) {
-            self.direction = .Increasing;
-        } else if (count_decreasing > count_increasing) {
-            self.direction = .Decreasing;
-        } else self.direction = .Unsafe;
     }
 
     fn checkSafety(self: *Self) !void {
