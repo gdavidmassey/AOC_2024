@@ -5,18 +5,28 @@ const InputIterator = @import("aoc.zig").InputIterator;
 const print = std.debug.print;
 
 pub fn day03(part: aoc.Part) !void {
-    _ = part;
     const input_path = "./input/day03.txt";
-    var input: InputIterator = try .init(input_path);
+    var input_buffer: [1048576]u8 = undefined;
+    var file = try std.fs.cwd().openFile(input_path, .{});
+    defer file.close();
+    const input_bufLen = try file.read(&input_buffer);
+
     var sum: u32 = 0;
 
-    while (input.next()) |line| {
-        // print("{s}\n", .{line});
-        const l = Lexer.init(line);
-        var p: Parser = .init(l);
-        while (p.lexer.ch != 0) {
-            sum += (p.parseMul() catch continue) orelse continue;
-        }
+    const l = Lexer.init(input_buffer[0..input_bufLen]);
+    var p: Parser = .init(l);
+    switch (part) {
+        .Part_01 => {
+            while (p.lexer.ch != 0) {
+                sum += (p.parseMul_p1() catch continue) orelse continue;
+            }
+        },
+        .Part_02 => {
+            while (p.lexer.ch != 0) {
+                p.parseToken();
+            }
+            sum = p.sum;
+        },
     }
     print("Sum of valid mul(a,b) operations: {d}\n", .{sum});
 }
@@ -70,6 +80,10 @@ const Lexer = struct {
             '(' => Token.init(.LParen, self.readChar()),
             ')' => Token.init(.RParen, self.readChar()),
             ',' => Token.init(.Comma, self.readChar()),
+            '\n' => newline: {
+                self.nextChar();
+                break :newline self.nextToken();
+            },
             0 => return .{ .type = .EOF, .data = "" },
             else => if (self.isDigit()) Token.init(.Number, self.readNumber()) else if (self.isLetter())
                 self.readIdentifier()
@@ -84,11 +98,16 @@ const Lexer = struct {
         while (self.isLetter()) self.nextChar();
 
         const tokenType = std.meta.stringToEnum(Token.TokenType, self.data[start..self.index]) orelse {
-            return Token.init(.Identifier, self.data[start..self.index]);
+            self.index = start;
+            self.read_ahead = start + 1;
+            self.nextChar();
+            return Token.init(.Corrupt, self.data[start..self.index]);
         };
 
         return switch (tokenType) {
-            .mul => Token.init(.mul, self.data[start..self.index]),
+            .mul => Token.init(tokenType, self.data[start..self.index]),
+            .do => Token.init(tokenType, self.data[start..self.index]),
+            .@"don't" => Token.init(tokenType, self.data[start..self.index]),
             else => Token.init(.Identifier, self.data[start..self.index]),
         };
     }
@@ -109,6 +128,11 @@ const Lexer = struct {
             'm' => true,
             'u' => true,
             'l' => true,
+            'd' => true,
+            'o' => true,
+            'n' => true,
+            't' => true,
+            '\'' => true,
             else => false,
         };
     }
@@ -124,6 +148,8 @@ const Token = struct {
         EOF,
         Identifier,
         mul,
+        do,
+        @"don't",
         Number,
         LParen,
         RParen,
@@ -144,6 +170,8 @@ const Token = struct {
 const Parser = struct {
     lexer: Lexer,
     token: Token = undefined,
+    mul: bool = true,
+    sum: u32 = 0,
 
     const Self = @This();
 
@@ -153,7 +181,35 @@ const Parser = struct {
         return l;
     }
 
-    pub fn parseMul(self: *Self) !?u32 {
+    pub fn parseToken(self: *Self) void {
+        self.nextToken();
+        switch (self.token.type) {
+            .mul => if (self.mul) self.parseMul() catch return,
+            .do => self.parseDo(),
+            .@"don't" => self.parseDont(),
+            else => return,
+        }
+    }
+
+    pub fn parseDo(self: *Self) void {
+        if (self.token.type != Token.TokenType.do) return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.LParen) return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.RParen) return;
+        self.mul = true;
+    }
+
+    pub fn parseDont(self: *Self) void {
+        if (self.token.type != Token.TokenType.@"don't") return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.LParen) return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.RParen) return;
+        self.mul = false;
+    }
+
+    pub fn parseMul_p1(self: *Self) !?u32 {
         while (self.token.type != Token.TokenType.mul) {
             self.nextToken();
             if (self.token.type == .EOF) return null;
@@ -170,8 +226,23 @@ const Parser = struct {
         const b: u32 = try std.fmt.parseInt(u32, self.token.data, 10);
         self.nextToken();
         if (self.token.type != Token.TokenType.RParen) return null;
-        // print("mul({d},{d})\n", .{ a, b });
         return a * b;
+    }
+
+    pub fn parseMul(self: *Self) !void {
+        self.nextToken();
+        if (self.token.type != Token.TokenType.LParen) return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.Number) return;
+        const a: u32 = try std.fmt.parseInt(u32, self.token.data, 10);
+        self.nextToken();
+        if (self.token.type != Token.TokenType.Comma) return;
+        self.nextToken();
+        if (self.token.type != Token.TokenType.Number) return;
+        const b: u32 = try std.fmt.parseInt(u32, self.token.data, 10);
+        self.nextToken();
+        if (self.token.type != Token.TokenType.RParen) return;
+        self.sum += a * b;
     }
 
     pub fn nextToken(self: *Self) void {
@@ -188,30 +259,47 @@ test "aoc day03 part1" {
         const l = Lexer.init(line);
         var p: Parser = .init(l);
         while (p.lexer.ch != 0) {
-            sum += (p.parseMul() catch continue) orelse continue;
+            sum += (p.parseMul_p1() catch continue) orelse continue;
         }
     }
 
     try std.testing.expectEqual(161, sum);
 }
 
-test "Testing Lexer" {
-    const input = "(4)123mul324$23don't4%@fizz_buzz!@#@";
-    var l = Lexer.init(input);
-    while (l.ch != 0) {
-        print("{}\n", .{l.nextToken()});
+test "aoc day03 part2" {
+    const input_path = "./input/day03_test_p2.txt";
+    var input: InputIterator = try .init(input_path);
+    var sum: u32 = 0;
+
+    while (input.next()) |line| {
+        const l = Lexer.init(line);
+        var p: Parser = .init(l);
+        while (p.lexer.ch != 0) {
+            p.parseToken();
+        }
+        sum += p.sum;
     }
+
+    try std.testing.expectEqual(48, sum);
 }
 
-test "Tesing Parser" {
-    const input = "(4)123mul324$23don't4%mul(12,3)@fizz_buzz!@#@";
-    const l = Lexer.init(input);
-    var p: Parser = .init(l);
-    var sum: u32 = 0;
-    print("{c}\n", .{p.lexer.ch});
-    while (p.lexer.ch != 0) {
-        print("{c}\n", .{p.lexer.ch});
-        sum += (p.parseMul() catch continue) orelse continue;
-    }
-    print("sum of mults is {d}\n", .{sum});
-}
+// test "Testing Lexer" {
+//     const input = "(4)123mul324$23don't4%@fizz_buzz!@#@";
+//     var l = Lexer.init(input);
+//     while (l.ch != 0) {
+//         print("{}\n", .{l.nextToken()});
+//     }
+// }
+//
+// test "Tesing Parser" {
+//     const input = "(4)123mul324$23don't4%mul(12,3)@fizz_buzz!@#@";
+//     const l = Lexer.init(input);
+//     var p: Parser = .init(l);
+//     var sum: u32 = 0;
+//     print("{c}\n", .{p.lexer.ch});
+//     while (p.lexer.ch != 0) {
+//         print("{c}\n", .{p.lexer.ch});
+//         sum += (p.parseMul_p1() catch continue) orelse continue;
+//     }
+//     print("sum of mults is {d}\n", .{sum});
+// }
