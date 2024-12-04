@@ -6,7 +6,7 @@ pub const Part = enum {
 };
 
 pub const InputIterator = struct {
-    _buffer: [1048576]u8 = undefined,
+    _buffer: [4048576]u8 = undefined,
     _bufLen: usize = 0,
     lines: std.mem.TokenIterator(u8, .any) = undefined,
 

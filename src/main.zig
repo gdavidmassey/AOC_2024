@@ -13,8 +13,8 @@ pub fn main() !void {
     // try day01.day01(.Part_01);
     // try day01.day01(.Part_02);
     // try day02.day02(.Part_01);
-    try day02.day02(.Part_02);
-    // try day03.day03(.Part_01);
+    // try day02.day02(.Part_02);
+    try day03.day03(.Part_01);
     // try day03.day03(.Part_02);
     // try day04.day04(.Part_01);
     // try day04.day04(.Part_02);
