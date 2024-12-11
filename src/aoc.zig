@@ -1,5 +1,20 @@
 const std = @import("std");
 
+pub fn check_or_create_file(dir: std.fs.Dir, file_name: []const u8) !void {
+    var file = dir.openFile(file_name, .{}) catch |err| blk: {
+        switch (err) {
+            std.fs.File.OpenError.FileNotFound => break :blk null,
+            else => return err,
+        }
+    };
+
+    if (file == null) {
+        _ = try dir.createFile(file_name, .{});
+    } else {
+        file.?.close();
+    }
+}
+
 pub const Part = enum {
     Part_01,
     Part_02,
