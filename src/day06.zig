@@ -10,42 +10,44 @@ const INPUT_BUFFER_SIZE = 1048576;
 
 pub fn day06(part: aoc.Part) !void {
     const input_path = "./input/day06.txt";
-    var charMap: CharMap = try .init(input_path);
+    const map_init: CharMap = try .init(input_path);
+    var map = map_init;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var visited: std.AutoHashMap(usize, u32) = .init(allocator);
 
-    var guard: Guard = .{ .location = undefined, .direction = .N, .char = '^' };
-    const start: usize = charMap.getChar(guard.char).?;
-    guard.location = start;
-    try visited.put(guard.location, 1);
-    var visited_count: u32 = 1;
+    const start: usize = map.getChar('^').?;
 
-    while (charMap.checkDirection(guard.location, guard.direction)) |i| {
-        // Test if guard is facing obstacle
-        if (charMap.grid_string[i] == '#') {
-            guard.turn();
-            charMap.grid_string[guard.location] = guard.char;
-        } else {
-            // Otherwise guard moves forward
-            charMap.grid_string[guard.location] = 'X';
-            guard.location = i;
-            const result = try visited.getOrPut(guard.location);
-            if (!result.found_existing) {
-                result.value_ptr.* = 0;
-            }
-            result.value_ptr.* += 0;
-            charMap.grid_string[guard.location] = guard.char;
-        }
-    }
-    var keys = visited.keyIterator();
-    while (keys.next()) |_| {
-        visited_count += 1;
-    }
     print("Day 06 - {s}: ", .{part});
     switch (part) {
-        .Part_01 => print("Patrol locations visited: {d}\n", .{visited_count}),
-        .Part_02 => print("\n", .{}),
+        .Part_01 => {
+            var guard: Guard = try .init(.N, start, '^', allocator);
+            try guard.patrol(&map);
+            print("Patrol locations visited: {d}\n", .{guard.visited.count()});
+        },
+        .Part_02 => {
+            var blocker: Guard = try .init(.N, start, '^', allocator);
+            defer blocker.deinit();
+            var loop_location: std.AutoHashMap(usize, bool) = .init(allocator);
+
+            while (try blocker.quickstep(&map)) {
+                map = map_init;
+                blocker.placeObstacle(&map);
+                var hare: Guard = .{ .direction = .N, .location = start, .char = '^' };
+                var tortoise: Guard = .{ .direction = .N, .location = start, .char = '^' };
+                defer {
+                    blocker.pickupObstacle(&map);
+                }
+                while (try hare.quickstep(&map)) {
+                    if (try hare.quickstep(&map)) {} else break;
+                    if (hare.location == tortoise.location and hare.char == tortoise.char) {
+                        try loop_location.put(blocker.location, true);
+                        break;
+                    }
+                    if (try tortoise.quickstep(&map)) {} else break;
+                }
+            }
+            print("Loop Count: {d}\n", .{loop_location.count()});
+        },
     }
 }
 
@@ -53,8 +55,19 @@ const Guard = struct {
     direction: Direction,
     location: usize,
     char: u8,
+    visited: std.AutoHashMap(usize, u32) = undefined,
 
     const Self = @This();
+
+    pub fn init(direction: Direction, location: usize, char: u8, allocator: std.mem.Allocator) !Self {
+        var self: Self = .{ .direction = direction, .location = location, .char = char, .visited = .init(allocator) };
+        try self.visited.put(location, 1);
+        return self;
+    }
+
+    pub fn deinit(self: *Self) void {
+        self.visited.deinit();
+    }
 
     pub fn turn(self: *Self) void {
         switch (self.direction) {
@@ -76,6 +89,55 @@ const Guard = struct {
             },
             else => unreachable,
         }
+    }
+
+    pub fn patrol(self: *Self, map: *CharMap) !void {
+        while (try self.step(map)) {}
+    }
+
+    pub fn step(self: *Self, map: *CharMap) !bool {
+        const next_i: usize = if (map.checkDirection(self.location, self.direction)) |i| i else {
+            return false;
+        };
+        // Test if guard is facing obstacle
+        if (map.grid_string[next_i] == '#') {
+            self.turn();
+            map.grid_string[self.location] = self.char;
+        } else {
+            // Otherwise guard moves forward
+            map.grid_string[self.location] = 'X';
+            self.location = next_i;
+            const result = try self.visited.getOrPut(self.location);
+            if (!result.found_existing) {
+                result.value_ptr.* = 0;
+            }
+            result.value_ptr.* += 0;
+            map.grid_string[self.location] = self.char;
+        }
+        return true;
+    }
+
+    // No need to remember location
+    pub fn quickstep(self: *Self, map: *CharMap) !bool {
+        const next_i: usize = if (map.checkDirection(self.location, self.direction)) |i| i else {
+            return false;
+        };
+        // Test if guard is facing obstacle
+        if (map.grid_string[next_i] == '#') {
+            self.turn();
+        } else {
+            // Otherwise guard moves forward
+            self.location = next_i;
+        }
+        return true;
+    }
+
+    pub fn placeObstacle(self: *Self, map: *CharMap) void {
+        map.grid_string[self.location] = '#';
+    }
+
+    pub fn pickupObstacle(self: *Self, map: *CharMap) void {
+        map.grid_string[self.location] = self.char;
     }
 };
 
@@ -190,9 +252,9 @@ test "aoc day06 part1" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     var visited: std.AutoHashMap(usize, u32) = .init(allocator);
+    const start: usize = charMap.getChar('^').?;
 
-    var guard: Guard = .{ .location = undefined, .direction = .N, .char = '^' };
-    const start: usize = charMap.getChar(guard.char).?;
+    var guard: Guard = try .init(.N, start, '^', allocator);
     guard.location = start;
     try visited.put(guard.location, 1);
     var visited_count: u32 = 0;
@@ -235,11 +297,48 @@ test "aoc day06 part1" {
     }
 }
 
-test "aoc day06 part2" {}
+test "aoc day06 part2" {
+    const input_path = "./input/day06_test.txt";
+    const sleep_duration = 100;
+    const map_init: CharMap = try .init(input_path);
+    var map = map_init;
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    const start: usize = map.getChar('^').?;
+
+    var blocker: Guard = try .init(.N, start, '^', allocator);
+    defer blocker.deinit();
+    var loop_location: std.AutoHashMap(usize, bool) = .init(allocator);
+
+    while (try blocker.quickstep(&map)) {
+        var hare: Guard = try .init(.N, start, '^', allocator);
+        var tortoise: Guard = try .init(.N, start, '^', allocator);
+        map = map_init;
+        blocker.placeObstacle(&map);
+        defer {
+            blocker.pickupObstacle(&map);
+            hare.deinit();
+            tortoise.deinit();
+        }
+        while (try hare.step(&map)) {
+            std.time.sleep(std.time.ns_per_ms * sleep_duration);
+            try map.clearPrint();
+            if (try hare.step(&map)) {} else break;
+            if (hare.location == tortoise.location and hare.char == tortoise.char) {
+                try loop_location.put(blocker.location, true);
+                break;
+            }
+            if (try tortoise.quickstep(&map)) {} else break;
+        }
+    }
+    print("Loop Count: {d}\n", .{loop_location.count()});
+}
 
 test "checkDirection" {
     const input = "123\n456\n789\n";
-    const charMap: CharMap = .init_slice(input);
+    var charMap: CharMap = .init_slice(input);
 
     try std.testing.expectEqual(12, charMap.grid_string_len);
     try std.testing.expectEqual('1', charMap.grid_string[charMap.checkDirection(5, .NW).?]);
