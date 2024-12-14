@@ -9,6 +9,7 @@ const assert = std.debug.assert;
 pub fn day11(part: aoc.Part) !void {
     const input_path = "./input/day11.txt";
     var input: InputIterator = try .init(input_path);
+    const allocator = std.heap.page_allocator;
 
     const input_stones = input.next().?;
     const blinks: u64 = switch (part) {
@@ -16,18 +17,48 @@ pub fn day11(part: aoc.Part) !void {
         .Part_02 => 75,
     };
 
+    var stone_map_a: std.AutoHashMap(Stone, u64) = .init(allocator);
     var stokens = std.mem.tokenizeAny(u8, input_stones, " \t");
 
-    var counter: u64 = 0;
-
     while (stokens.next()) |stoken| {
-        counter += 1;
-        const a_stone: Stone = .init(try std.fmt.parseInt(u64, stoken, 10));
-        try a_stone.blinkN(blinks, &counter);
-        print("Initial stone blinked out\n", .{});
+        try stone_map_a.put(.init(try std.fmt.parseInt(u64, stoken, 10)), 1);
     }
 
-    print("Total number of stones after {d} blinks: {d}\n", .{ blinks, counter });
+    for (0..blinks) |_| {
+        var stone_map_b: std.AutoHashMap(Stone, u64) = .init(allocator);
+        var map_iter = stone_map_a.iterator();
+        while (map_iter.next()) |map_entry| {
+            const blink_result = try map_entry.key_ptr.*.blink();
+            switch (blink_result) {
+                .One => |stone| {
+                    const result = try stone_map_b.getOrPut(stone);
+                    if (result.found_existing) {
+                        result.value_ptr.* += map_entry.value_ptr.*;
+                    } else {
+                        result.value_ptr.* = map_entry.value_ptr.*;
+                    }
+                },
+                .Two => |stones| {
+                    for (stones) |stone| {
+                        const result = try stone_map_b.getOrPut(stone);
+                        if (result.found_existing) {
+                            result.value_ptr.* += map_entry.value_ptr.*;
+                        } else {
+                            result.value_ptr.* = map_entry.value_ptr.*;
+                        }
+                    }
+                },
+            }
+        }
+        stone_map_a.deinit();
+        stone_map_a = stone_map_b;
+    }
+
+    var stone_count: u64 = 0;
+    var map_iter = stone_map_a.valueIterator();
+    while (map_iter.next()) |value| stone_count += value.*;
+    print("Day 11 - {any}: ", .{part});
+    print("Total number of stones after {d} blinks: {d}\n", .{ blinks, stone_count });
 }
 
 const Stone = struct {
@@ -42,6 +73,12 @@ const Stone = struct {
 
     pub fn init(number: u64) Self {
         return .{ .number = number };
+    }
+
+    pub fn hash(self: Self) u64 {
+        var hasher = std.hash.hasherFnv1a(u64);
+        hasher.hash(self.number);
+        return hasher.finish();
     }
 
     pub fn blink(self: *const Self) !Stones {
@@ -94,13 +131,61 @@ test "aoc Day 11 Part 1" {
     print("{d}\n", .{counter});
 }
 
+test "aoc Day 11 Part 2" {
+    const input_path = "./input/day11.txt";
+    const allocator = std.heap.page_allocator;
+
+    var stone_map_a: std.AutoHashMap(Stone, u64) = .init(allocator);
+    var input: InputIterator = try .init(input_path);
+
+    const input_stones = input.next().?;
+
+    var stokens = std.mem.tokenizeAny(u8, input_stones, " \t");
+
+    while (stokens.next()) |stoken| {
+        try stone_map_a.put(.init(try std.fmt.parseInt(u64, stoken, 10)), 1);
+    }
+
+    for (0..75) |_| {
+        var stone_map_b: std.AutoHashMap(Stone, u64) = .init(allocator);
+        var map_iter = stone_map_a.iterator();
+        while (map_iter.next()) |map_entry| {
+            const blink_result = try map_entry.key_ptr.*.blink();
+            switch (blink_result) {
+                .One => |stone| {
+                    const result = try stone_map_b.getOrPut(stone);
+                    if (result.found_existing) {
+                        result.value_ptr.* += map_entry.value_ptr.*;
+                    } else {
+                        result.value_ptr.* = map_entry.value_ptr.*;
+                    }
+                },
+                .Two => |stones| {
+                    for (stones) |stone| {
+                        const result = try stone_map_b.getOrPut(stone);
+                        if (result.found_existing) {
+                            result.value_ptr.* += map_entry.value_ptr.*;
+                        } else {
+                            result.value_ptr.* = map_entry.value_ptr.*;
+                        }
+                    }
+                },
+            }
+        }
+        stone_map_a.deinit();
+        stone_map_a = stone_map_b;
+    }
+
+    var stone_count: u64 = 0;
+    var map_iter = stone_map_a.valueIterator();
+    while (map_iter.next()) |value| stone_count += value.*;
+    print("{d}\n", .{stone_count});
+}
+
 test "blink" {
     const zero_stone: Stone = .init(0);
     const even_stone: Stone = .init(234342);
     const uneven_stone: Stone = .init(1);
-    // print("{any}\n", .{try zero_stone.blink()});
-    // print("{any}\n", .{try even_stone.blink()});
-    // print("{any}\n", .{try uneven_stone.blink()});
 
     try std.testing.expectEqual(1, (try zero_stone.blink()).One.number);
     try std.testing.expectEqual(234, (try even_stone.blink()).Two[0].number);
