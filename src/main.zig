@@ -11,6 +11,7 @@ const day07 = @import("day07.zig");
 const day09 = @import("day09.zig");
 const day10 = @import("day10.zig");
 const day11 = @import("day11.zig");
+const day12 = @import("day12.zig");
 
 pub fn main() !void {
     const fs = std.fs;
@@ -31,24 +32,26 @@ pub fn main() !void {
         try aoc.check_or_create_file(input_dir, test_input_filename);
     }
 
-    try day01.day01(.Part_01);
-    try day01.day01(.Part_02);
-    try day02.day02(.Part_01);
-    try day02.day02(.Part_02);
-    try day03.day03(.Part_01);
-    try day03.day03(.Part_02);
-    try day04.day04(.Part_01);
-    try day04.day04(.Part_02);
-    try day05.day05(.Part_01);
-    try day05.day05(.Part_02);
-    try day06.day06(.Part_01);
-    try day06.day06(.Part_02);
-    try day07.day07(.Part_01);
-    try day07.day07(.Part_02);
-    try day09.day09(.Part_01);
-    try day09.day09(.Part_02);
-    try day10.day10(.Part_01);
-    try day10.day10(.Part_02);
-    try day11.day11(.Part_01);
-    try day11.day11(.Part_02);
+    // try day01.day01(.Part_01);
+    // try day01.day01(.Part_02);
+    // try day02.day02(.Part_01);
+    // try day02.day02(.Part_02);
+    // try day03.day03(.Part_01);
+    // try day03.day03(.Part_02);
+    // try day04.day04(.Part_01);
+    // try day04.day04(.Part_02);
+    // try day05.day05(.Part_01);
+    // try day05.day05(.Part_02);
+    // try day06.day06(.Part_01);
+    // try day06.day06(.Part_02);
+    // try day07.day07(.Part_01);
+    // try day07.day07(.Part_02);
+    // try day09.day09(.Part_01);
+    // try day09.day09(.Part_02);
+    // try day10.day10(.Part_01);
+    // try day10.day10(.Part_02);
+    // try day11.day11(.Part_01);
+    // try day11.day11(.Part_02);
+    try day12.day12(.Part_01);
+    try day12.day12(.Part_02);
 }
