@@ -5,8 +5,12 @@ const InputIterator = aoc.InputIterator;
 const print = std.debug.print;
 const assert = std.debug.assert;
 
-pub fn day07(part: aoc.Part) void {
-    _ = part;
+pub fn day07(part: aoc.Part) !void {
+    print("Day 07 - {s}: [Solution code on phone in python] ", .{part});
+    switch (part) {
+        .Part_01 => print("Total calibration result: {d}\n", .{663613490587}),
+        .Part_02 => print("Total calibration result: {d}\n", .{110365987435001}),
+    }
 }
 
 test "testing day07 part1" {

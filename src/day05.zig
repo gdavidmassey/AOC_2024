@@ -35,6 +35,7 @@ pub fn day05(part: aoc.Part) !void {
             sum_p2 += myDic.current_report.items[myDic.current_report.items.len / 2];
         }
     }
+    print("Day 05 - {s}: ", .{part});
     switch (part) {
         .Part_01 => print("Checksum of ordered reports: {d}\n", .{sum_p1}),
         .Part_02 => print("Checksum of unordered reports: {d}\n", .{sum_p2}),

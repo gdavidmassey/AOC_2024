@@ -8,6 +8,8 @@ const day04 = @import("day04.zig");
 const day05 = @import("day05.zig");
 const day06 = @import("day06.zig");
 const day07 = @import("day07.zig");
+const day09 = @import("day09.zig");
+const day10 = @import("day10.zig");
 
 pub fn main() !void {
     const fs = std.fs;
@@ -39,7 +41,11 @@ pub fn main() !void {
     try day05.day05(.Part_01);
     try day05.day05(.Part_02);
     try day06.day06(.Part_01);
-    // try day06.day06(.Part_02);
-    // try day07.day07(.Part_01);
-    // try day07.day07(.Part_02);
+    try day06.day06(.Part_02);
+    try day07.day07(.Part_01);
+    try day07.day07(.Part_02);
+    try day09.day09(.Part_01);
+    try day09.day09(.Part_02);
+    try day10.day10(.Part_01);
+    try day10.day10(.Part_02);
 }

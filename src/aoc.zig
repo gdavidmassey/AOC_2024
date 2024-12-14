@@ -18,6 +18,15 @@ pub fn check_or_create_file(dir: std.fs.Dir, file_name: []const u8) !void {
 pub const Part = enum {
     Part_01,
     Part_02,
+
+    pub fn format(self: Part, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        const str_fmt = switch (self) {
+            .Part_01 => "Part 1",
+            .Part_02 => "Part 2",
+        };
+
+        try writer.print("{s}", .{str_fmt});
+    }
 };
 
 pub const InputIterator = struct {

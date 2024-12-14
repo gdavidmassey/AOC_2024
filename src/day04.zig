@@ -28,6 +28,7 @@ pub fn day04(part: aoc.Part) !void {
         }
     }
 
+    print("Day 04 - {s}: ", .{part});
     print("xmas count: {d}\n", .{xmas_count});
 }
 

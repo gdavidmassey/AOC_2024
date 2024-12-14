@@ -19,6 +19,7 @@ pub fn day02(part: aoc.Part) !void {
             .Unsafe => {},
         }
     }
+    print("Day 02 - {s}: ", .{part});
     print("Total number of safe records with error tolerance {d}: {d}\n", .{ error_tolerance, safe_count });
 }
 

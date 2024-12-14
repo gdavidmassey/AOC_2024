@@ -28,6 +28,7 @@ pub fn day03(part: aoc.Part) !void {
             sum = p.sum;
         },
     }
+    print("Day 03 - {s}: ", .{part});
     print("Sum of valid mul(a,b) operations: {d}\n", .{sum});
 }
 

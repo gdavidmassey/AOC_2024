@@ -8,42 +8,19 @@ const assert = std.debug.assert;
 
 const INPUT_BUFFER_SIZE = 1048576;
 
-pub fn day06(part: aoc.Part) !void {
-    _ = part;
-    const input_path = "./input/day06.txt";
-    var charMap: CharMap = try .init(input_path);
+pub fn day10(part: aoc.Part) !void {
+    const input_path = "./input/day10.txt";
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var visited: std.AutoHashMap(usize, u32) = .init(allocator);
 
-    var guard: Guard = .{ .location = undefined, .direction = .N, .char = '^' };
-    const start: usize = charMap.getChar(guard.char).?;
-    guard.location = start;
-    try visited.put(guard.location, 1);
-    var visited_count: u32 = 1;
+    var charMap: CharMap = try .init(input_path);
+    try charMap.count_paths(allocator);
 
-    while (charMap.checkDirection(guard.location, guard.direction)) |i| {
-        // Test if guard is facing obstacle
-        if (charMap.grid_string[i] == '#') {
-            guard.turn();
-            charMap.grid_string[guard.location] = guard.char;
-        } else {
-            // Otherwise guard moves forward
-            charMap.grid_string[guard.location] = 'X';
-            guard.location = i;
-            const result = try visited.getOrPut(guard.location);
-            if (!result.found_existing) {
-                result.value_ptr.* = 0;
-            }
-            result.value_ptr.* += 0;
-            charMap.grid_string[guard.location] = guard.char;
-        }
+    print("Day 10 - {any}: ", .{part});
+    switch (part) {
+        .Part_01 => print("Total peaks reachable from trailhead: {d}\n", .{charMap.path_count}),
+        .Part_02 => print("Total distinct paths from trailhead: {d}\n", .{charMap.distinct_path_count}),
     }
-    var keys = visited.keyIterator();
-    while (keys.next()) |_| {
-        visited_count += 1;
-    }
-    try stdout.print("Patrol locations visited: {d}\n", .{visited_count});
 }
 
 const Guard = struct {
@@ -81,6 +58,8 @@ const CharMap = struct {
     grid_string_len: usize = undefined,
     width: usize = undefined,
     height: usize = undefined,
+    path_count: u32 = 0,
+    distinct_path_count: u32 = 0,
 
     const Self = @This();
 
@@ -188,6 +167,33 @@ const CharMap = struct {
         }
         return self.indexFromXY(xy);
     }
+
+    pub fn count_path_from_index(self: *Self, cur_index: usize, peak_map: *std.AutoHashMap(usize, bool)) !void {
+        for ([4]Direction{ .N, .S, .E, .W }) |dir| {
+            if (self.checkDirection(cur_index, dir)) |path_index| {
+                if (self.grid_string[path_index] < '0' or self.grid_string[path_index] > '9' or self.grid_string[path_index] < self.grid_string[cur_index]) continue;
+
+                if (self.grid_string[path_index] - self.grid_string[cur_index] == 1) {
+                    if (self.grid_string[path_index] == '9') {
+                        try peak_map.put(path_index, true);
+                        self.distinct_path_count += 1;
+                        continue;
+                    }
+                    try self.count_path_from_index(path_index, peak_map);
+                }
+            }
+        }
+    }
+
+    pub fn count_paths(self: *Self, allocator: std.mem.Allocator) !void {
+        for (self.grid_string, 0..) |c, i| {
+            var trailpeak: std.AutoHashMap(usize, bool) = .init(allocator);
+            if (c == '0') {
+                try self.count_path_from_index(i, &trailpeak);
+            }
+            self.path_count += trailpeak.count();
+        }
+    }
 };
 
 const Direction = enum {
@@ -206,59 +212,18 @@ const XY = struct {
     y: usize,
 };
 
-test "aoc day06 part1" {
-    const input_path = "./input/day06_test.txt";
-    const sleep_duration = 100;
-    var charMap: CharMap = try .init(input_path);
+test "aoc day10 part1" {
+    const input_path = "./input/day10_test2.txt";
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var visited: std.AutoHashMap(usize, u32) = .init(allocator);
 
-    var guard: Guard = .{ .location = undefined, .direction = .N, .char = '^' };
-    const start: usize = charMap.getChar(guard.char).?;
-    guard.location = start;
-    try visited.put(guard.location, 1);
-    var visited_count: u32 = 0;
-    var keys = visited.keyIterator();
+    var charMap: CharMap = try .init(input_path);
+    try charMap.count_paths(allocator);
 
-    try charMap.clearPrint();
-    while (keys.next()) |_| {
-        visited_count += 1;
-    }
-    try stdout.print("Patrol locations visited: {d}\n", .{visited_count});
-    std.time.sleep(std.time.ns_per_ms * sleep_duration);
-
-    while (charMap.checkDirection(guard.location, guard.direction)) |i| {
-        visited_count = 0;
-        // Test if guard is facing obstacle
-        if (charMap.grid_string[i] == '#') {
-            guard.turn();
-            charMap.grid_string[guard.location] = guard.char;
-        } else {
-            // Otherwise guard moves forward
-            charMap.grid_string[guard.location] = 'X';
-            guard.location = i;
-            const result = try visited.getOrPut(guard.location);
-            if (!result.found_existing) {
-                result.value_ptr.* = 0;
-            }
-            result.value_ptr.* += 0;
-            charMap.grid_string[guard.location] = guard.char;
-        }
-
-        // Print new location
-        try charMap.clearPrint();
-        keys = visited.keyIterator();
-        while (keys.next()) |_| {
-            visited_count += 1;
-        }
-        try stdout.print("w: {d}\nh:{d}\n", .{ charMap.width, charMap.height });
-        try stdout.print("Patrol locations visited: {d}\n", .{visited_count});
-        std.time.sleep(std.time.ns_per_ms * sleep_duration);
-    }
+    print("{d}\n", .{charMap.path_count});
 }
 
-test "aoc day06 part2" {}
+test "aoc day10 part2" {}
 
 test "checkDirection" {
     const input = "123\n456\n789\n";

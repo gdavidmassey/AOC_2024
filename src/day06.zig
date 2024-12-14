@@ -9,7 +9,6 @@ const assert = std.debug.assert;
 const INPUT_BUFFER_SIZE = 1048576;
 
 pub fn day06(part: aoc.Part) !void {
-    _ = part;
     const input_path = "./input/day06.txt";
     var charMap: CharMap = try .init(input_path);
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -43,7 +42,11 @@ pub fn day06(part: aoc.Part) !void {
     while (keys.next()) |_| {
         visited_count += 1;
     }
-    try stdout.print("Patrol locations visited: {d}\n", .{visited_count});
+    print("Day 06 - {s}: ", .{part});
+    switch (part) {
+        .Part_01 => print("Patrol locations visited: {d}\n", .{visited_count}),
+        .Part_02 => print("\n", .{}),
+    }
 }
 
 const Guard = struct {

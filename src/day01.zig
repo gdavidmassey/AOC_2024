@@ -28,6 +28,7 @@ pub fn day01(part: aoc.Part) !void {
     std.mem.sort(u32, column1.items[0..], {}, std.sort.asc(u32));
     std.mem.sort(u32, column2.items[0..], {}, std.sort.asc(u32));
 
+    print("Day 01 - {s}: ", .{part});
     switch (part) {
         .Part_01 => {
             const sum_distance = try compareDistance(&column1, &column2);
