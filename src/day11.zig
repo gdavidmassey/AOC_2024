@@ -7,12 +7,20 @@ const print = std.debug.print;
 const assert = std.debug.assert;
 
 pub fn day11(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day11.txt";
     var input: InputIterator = try .init(input_path);
     const allocator = std.heap.page_allocator;
 
     const input_stones = input.next().?;
-    const blinks: u64 = switch (part) {
+    const blinks: usize = switch (part) {
         .Part_01 => 25,
         .Part_02 => 75,
     };
@@ -58,7 +66,7 @@ pub fn day11(part: aoc.Part) !void {
     var map_iter = stone_map_a.valueIterator();
     while (map_iter.next()) |value| stone_count += value.*;
     print("Day 11 - {any}: ", .{part});
-    print("Total number of stones after {d} blinks: {d}\n", .{ blinks, stone_count });
+    print("Total number of stones after {d} blinks: {d}", .{ blinks, stone_count });
 }
 
 const Stone = struct {

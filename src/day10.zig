@@ -9,6 +9,14 @@ const assert = std.debug.assert;
 const INPUT_BUFFER_SIZE = 1048576;
 
 pub fn day10(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day10.txt";
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -18,8 +26,8 @@ pub fn day10(part: aoc.Part) !void {
 
     print("Day 10 - {any}: ", .{part});
     switch (part) {
-        .Part_01 => print("Total peaks reachable from trailhead: {d}\n", .{charMap.path_count}),
-        .Part_02 => print("Total distinct paths from trailhead: {d}\n", .{charMap.distinct_path_count}),
+        .Part_01 => print("Total peaks reachable from trailhead: {d}", .{charMap.path_count}),
+        .Part_02 => print("Total distinct paths from trailhead: {d}", .{charMap.distinct_path_count}),
     }
 }
 

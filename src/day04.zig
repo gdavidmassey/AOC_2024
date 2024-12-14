@@ -8,10 +8,17 @@ const assert = std.debug.assert;
 const INPUT_BUFFER_SIZE = 1048576;
 
 pub fn day04(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day04.txt";
     const xmasMap: XmasMap = try .init(input_path);
     var xmas_count: u32 = 0;
-    // print("{d} - {d}x{d}\n", .{ xmasMap.grid_string_len, xmasMap.width, xmasMap.height });
 
     for (xmasMap.grid_string, 0..) |c, i| {
         if (i > xmasMap.grid_string_len) break;
@@ -30,7 +37,7 @@ pub fn day04(part: aoc.Part) !void {
     }
 
     print("Day 04 - {s}: ", .{part});
-    print("xmas count: {d}\n", .{xmas_count});
+    print("xmas count: {d}", .{xmas_count});
 }
 
 const XmasMap = struct {

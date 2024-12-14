@@ -5,6 +5,14 @@ const InputIterator = @import("aoc.zig").InputIterator;
 const print = std.debug.print;
 
 pub fn day03(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_us = @divFloor(elapsed, std.time.ns_per_us);
+        std.debug.print(" : {d}us\n", .{elapsed_us});
+    }
+
     const input_path = "./input/day03.txt";
     var input_buffer: [1048576]u8 = undefined;
     var file = try std.fs.cwd().openFile(input_path, .{});
@@ -29,7 +37,7 @@ pub fn day03(part: aoc.Part) !void {
         },
     }
     print("Day 03 - {s}: ", .{part});
-    print("Sum of valid mul(a,b) operations: {d}\n", .{sum});
+    print("Sum of valid mul(a,b) operations: {d}", .{sum});
 }
 
 const Lexer = struct {

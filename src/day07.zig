@@ -6,10 +6,18 @@ const print = std.debug.print;
 const assert = std.debug.assert;
 
 pub fn day07(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     print("Day 07 - {s}: [Solution code on phone in python] ", .{part});
     switch (part) {
-        .Part_01 => print("Total calibration result: {d}\n", .{663613490587}),
-        .Part_02 => print("Total calibration result: {d}\n", .{110365987435001}),
+        .Part_01 => print("Total calibration result: {d}", .{663613490587}),
+        .Part_02 => print("Total calibration result: {d}", .{110365987435001}),
     }
 }
 

@@ -9,6 +9,14 @@ const assert = std.debug.assert;
 const INPUT_BUFFER_SIZE = 1048576;
 
 pub fn day06(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day06.txt";
     const map_init: CharMap = try .init(input_path);
     var map = map_init;
@@ -22,7 +30,7 @@ pub fn day06(part: aoc.Part) !void {
         .Part_01 => {
             var guard: Guard = try .init(.N, start, '^', allocator);
             try guard.patrol(&map);
-            print("Patrol locations visited: {d}\n", .{guard.visited.count()});
+            print("Patrol locations visited: {d}", .{guard.visited.count()});
         },
         .Part_02 => {
             var blocker: Guard = try .init(.N, start, '^', allocator);
@@ -46,7 +54,7 @@ pub fn day06(part: aoc.Part) !void {
                     if (try tortoise.quickstep(&map)) {} else break;
                 }
             }
-            print("Loop Count: {d}\n", .{loop_location.count()});
+            print("Loop Count: {d}", .{loop_location.count()});
         },
     }
 }

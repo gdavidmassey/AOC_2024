@@ -5,6 +5,14 @@ const InputIterator = aoc.InputIterator;
 const print = std.debug.print;
 
 pub fn day02(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day02.txt";
     var input: InputIterator = try .init(input_path);
 
@@ -20,7 +28,7 @@ pub fn day02(part: aoc.Part) !void {
         }
     }
     print("Day 02 - {s}: ", .{part});
-    print("Total number of safe records with error tolerance {d}: {d}\n", .{ error_tolerance, safe_count });
+    print("Total number of safe records with error tolerance {d}: {d}", .{ error_tolerance, safe_count });
 }
 
 const Direction = enum {

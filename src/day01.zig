@@ -6,6 +6,14 @@ const assert = std.debug.assert;
 const print = std.debug.print;
 
 pub fn day01(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day01.txt";
     var input: InputIterator = try .init(input_path);
 
@@ -32,11 +40,11 @@ pub fn day01(part: aoc.Part) !void {
     switch (part) {
         .Part_01 => {
             const sum_distance = try compareDistance(&column1, &column2);
-            print("Total distance between pairs: {d}\n", .{sum_distance});
+            print("Total distance between pairs: {d}", .{sum_distance});
         },
         .Part_02 => {
             const sum_similarity = try compareSimilarity_(&column1, &column2);
-            print("Total similarity score: {d}\n", .{sum_similarity});
+            print("Total similarity score: {d}", .{sum_similarity});
         },
     }
 }

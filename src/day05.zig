@@ -8,11 +8,18 @@ const print = std.debug.print;
 const assert = std.debug.assert;
 
 pub fn day05(part: aoc.Part) !void {
+    const start_time = std.time.nanoTimestamp();
+    defer {
+        const end_time = std.time.nanoTimestamp();
+        const elapsed = end_time - start_time;
+        const elapsed_ms = @divFloor(elapsed, std.time.ns_per_ms);
+        std.debug.print(" : {d}ms\n", .{elapsed_ms});
+    }
+
     const input_path = "./input/day05.txt";
     var input: InputIterator = try .init_(input_path);
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    // defer assert(gpa.deinit() == .ok);
     defer arena.deinit();
 
     const allocator = arena.allocator();
@@ -37,8 +44,8 @@ pub fn day05(part: aoc.Part) !void {
     }
     print("Day 05 - {s}: ", .{part});
     switch (part) {
-        .Part_01 => print("Checksum of ordered reports: {d}\n", .{sum_p1}),
-        .Part_02 => print("Checksum of unordered reports: {d}\n", .{sum_p2}),
+        .Part_01 => print("Checksum of ordered reports: {d}", .{sum_p1}),
+        .Part_02 => print("Checksum of unordered reports: {d}", .{sum_p2}),
     }
 }
 
