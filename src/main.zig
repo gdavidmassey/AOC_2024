@@ -1,6 +1,5 @@
 const std = @import("std");
 const aoc = @import("aoc.zig");
-const zbench = @import("zbench");
 
 const day01 = @import("day01.zig");
 const day02 = @import("day02.zig");
@@ -11,6 +10,7 @@ const day06 = @import("day06.zig");
 const day07 = @import("day07.zig");
 const day09 = @import("day09.zig");
 const day10 = @import("day10.zig");
+const day11 = @import("day11.zig");
 
 pub fn main() !void {
     const fs = std.fs;
@@ -49,17 +49,6 @@ pub fn main() !void {
     try day09.day09(.Part_02);
     try day10.day10(.Part_01);
     try day10.day10(.Part_02);
-}
-
-fn bench_BenchmarkSomething() void {
-    for (0..(1 << 20)) |i| {
-        std.debug.print("{d}", .{i});
-    }
-}
-
-test "bench test" {
-    var bench = zbench.Benchmark.init(std.testing.allocator, .{});
-    defer bench.deinit();
-    try bench.add("My Benchmark", bench_BenchmarkSomething, .{});
-    try bench.run(std.io.getStdOut().writer());
+    try day11.day11(.Part_01);
+    try day11.day11(.Part_02);
 }

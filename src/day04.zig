@@ -223,5 +223,4 @@ test "checkDirection" {
     try std.testing.expectEqual('8', xmasMap.grid_string[xmasMap.checkDirection(5, .S).?]);
     try std.testing.expectEqual('9', xmasMap.grid_string[xmasMap.checkDirection(5, .SE).?]);
     try std.testing.expectEqual(12, xmasMap.grid_string_len);
-    try std.testing.expectEqual(12, xmasMap.grid_string_len);
 }

@@ -183,5 +183,4 @@ test "checkDirection" {
     try std.testing.expectEqual('8', charMap.grid_string[charMap.checkDirection(5, .S).?]);
     try std.testing.expectEqual('9', charMap.grid_string[charMap.checkDirection(5, .SE).?]);
     try std.testing.expectEqual(12, charMap.grid_string_len);
-    try std.testing.expectEqual(12, charMap.grid_string_len);
 }
