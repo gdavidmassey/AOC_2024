@@ -161,7 +161,7 @@ const Token = struct {
         return .{ .type = t, .data = d };
     }
 
-    pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+    pub fn format(self: *Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
         _ = fmt;
         _ = options;
         try writer.print("{s}: \"{s}\"", .{ @tagName(self.type), self.data });

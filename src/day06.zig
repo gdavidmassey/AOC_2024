@@ -107,48 +107,22 @@ const CharMap = struct {
         return self;
     }
 
-    pub fn clearPrint(self: Self) !void {
+    pub fn clearPrint(self: *Self) !void {
         const writer = std.io.getStdOut().writer();
         try writer.print("\x1B[2J\x1B[H", .{});
         // try writer.print("\x1B[96m#\x1B[0m", .{});
         try writer.print("{s}", .{self.grid_string});
     }
 
-    pub fn getXY(self: Self, i: usize) XY {
+    pub fn getXY(self: *Self, i: usize) XY {
         return .{ .x = i % self.width, .y = i / self.width };
     }
 
-    pub fn indexFromXY(self: Self, xy: XY) usize {
+    pub fn indexFromXY(self: *Self, xy: XY) usize {
         return xy.y * self.width + xy.x;
     }
 
-    pub fn countXmas(self: Self, i: usize) u32 {
-        var sumXmas: u32 = 0;
-        const directions: [8]Direction = [_]Direction{ .N, .S, .E, .W, .NE, .NW, .SE, .SW };
-
-        for (directions) |direction| {
-            if (self.checkXmas(i, direction)) sumXmas += 1;
-        }
-        return sumXmas;
-    }
-
-    pub fn countXMas(self: Self, i: usize) u32 {
-        var sumXMas: u32 = 0;
-        const directions: [2][2]Direction = [2][2]Direction{ [2]Direction{ .NE, .SW }, [2]Direction{ .NW, .SE } };
-
-        outer: for (directions) |pair| {
-            var checksum: u32 = 0;
-            for (pair) |dir| {
-                const j = self.checkDirection(i, dir) orelse continue :outer;
-                checksum += self.grid_string[j];
-            }
-            if (checksum == 'M' + 'S') sumXMas += 1;
-        }
-
-        return if (sumXMas == 2) 1 else 0;
-    }
-
-    pub fn getChar(self: Self, needle: u8) ?usize {
+    pub fn getChar(self: *Self, needle: u8) ?usize {
         for (self.grid_string, 0..) |c, i| {
             if (needle == c) {
                 return i;
@@ -157,7 +131,7 @@ const CharMap = struct {
         return null;
     }
 
-    pub fn checkDirection(self: Self, i: usize, dir: Direction) ?usize {
+    pub fn checkDirection(self: *Self, i: usize, dir: Direction) ?usize {
         var xy = self.getXY(i);
         switch (dir) {
             .N => {

@@ -14,6 +14,7 @@ pub fn day04(part: aoc.Part) !void {
     // print("{d} - {d}x{d}\n", .{ xmasMap.grid_string_len, xmasMap.width, xmasMap.height });
 
     for (xmasMap.grid_string, 0..) |c, i| {
+        if (i > xmasMap.grid_string_len) break;
         switch (part) {
             .Part_01 => {
                 if (c == 'X') {
@@ -60,15 +61,15 @@ const XmasMap = struct {
         return self;
     }
 
-    pub fn getXY(self: Self, i: usize) XY {
+    pub fn getXY(self: *const Self, i: usize) XY {
         return .{ .x = i % self.width, .y = i / self.width };
     }
 
-    pub fn indexFromXY(self: Self, xy: XY) usize {
+    pub fn indexFromXY(self: *const Self, xy: XY) usize {
         return xy.y * self.width + xy.x;
     }
 
-    pub fn countXmas(self: Self, i: usize) u32 {
+    pub fn countXmas(self: *const Self, i: usize) u32 {
         var sumXmas: u32 = 0;
         const directions: [8]Direction = [_]Direction{ .N, .S, .E, .W, .NE, .NW, .SE, .SW };
 
@@ -78,7 +79,7 @@ const XmasMap = struct {
         return sumXmas;
     }
 
-    pub fn countXMas(self: Self, i: usize) u32 {
+    pub fn countXMas(self: *const Self, i: usize) u32 {
         var sumXMas: u32 = 0;
         const directions: [2][2]Direction = [2][2]Direction{ [2]Direction{ .NE, .SW }, [2]Direction{ .NW, .SE } };
 
@@ -94,7 +95,7 @@ const XmasMap = struct {
         return if (sumXMas == 2) 1 else 0;
     }
 
-    pub fn checkXmas(self: Self, i: usize, dir: Direction) bool {
+    pub fn checkXmas(self: *const Self, i: usize, dir: Direction) bool {
         const xmas = "MAS";
         var j = i;
         // print("{c}\n", .{self.grid_string[i]});
@@ -106,7 +107,7 @@ const XmasMap = struct {
         return true;
     }
 
-    pub fn checkDirection(self: Self, i: usize, dir: Direction) ?usize {
+    pub fn checkDirection(self: *const Self, i: usize, dir: Direction) ?usize {
         var xy = self.getXY(i);
         switch (dir) {
             .N => {

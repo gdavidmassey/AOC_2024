@@ -107,7 +107,7 @@ const OrdDict = struct {
         }
     }
 
-    pub fn get(self: Self, k: u32) ?*ArrayList(u32) {
+    pub fn get(self: *Self, k: u32) ?*ArrayList(u32) {
         return self.dict.getPtr(k);
     }
 
